@@ -190,9 +190,8 @@ if __name__ == "__main__":
     orig_text = open('covert.txt', 'r')
     words = nltk.word_tokenize(orig_text.read())
 
-    cnt = 0
     i = 1
-    for word in words:
+    for id, word in enumerate(words):
         suff_less_word = stemmer.stem(word)
         word_pos = pos_tag(word)
         if len(msg) > 0:
@@ -214,7 +213,7 @@ if __name__ == "__main__":
                                 print("mamy slowo")
                                 print(msg)
                                 print(similarity_code.get(c))
-                                words[cnt] = similarity_code.get(c)
+                                words[id] = similarity_code.get(c)
                                 break
                             else:
                                 continue
@@ -237,7 +236,7 @@ if __name__ == "__main__":
                                 print("mamy slowo")
                                 print(msg)
                                 print(similarity_code.get(c))
-                                words[cnt] = similarity_code.get(c)
+                                words[id] = similarity_code.get(c)
                                 break
                             else:
                                 continue
@@ -249,7 +248,6 @@ if __name__ == "__main__":
             stego = ' '.join(words)
             steg_text.write(stego)
             break
-    cnt = cnt+1
 
     orig_text.close()
     steg_text.close()
