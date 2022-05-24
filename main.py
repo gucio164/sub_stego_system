@@ -190,25 +190,66 @@ if __name__ == "__main__":
     orig_text = open('covert.txt', 'r')
     words = nltk.word_tokenize(orig_text.read())
 
-    while(1):
-        rand_nr = random.randint(0, len(words))
-        suff_less_word = stemmer.stem(words[rand_nr])
-        word_pos = pos_tag(suff_less_word)
-        if word_pos[0] == 'NOUN':
-            print("")
-            similarity = check_similarity(suff_less_word, list_synonyms(suff_less_word, 'NOUN'))
-            similarity = {y: x for x, y in similarity.items()}
-            similarity_code = dic_bin_codes(list(similarity.items()))
-            similarity_code = {y: x for x, y in similarity_code.items()}
-            print(similarity_code)
-            break
-        elif word_pos[0] == 'VERB':
-            print("")
-            similarity = check_similarity(suff_less_word, list_synonyms(suff_less_word, 'VERB'))
-            similarity = {y: x for x, y in similarity.items()}
-            similarity_code = dic_bin_codes(list(similarity.items()))
-            similarity_code = {y: x for x, y in similarity_code.items()}
-            print(similarity_code)
-            break
+    cnt = 0
+    i = 1
+    for word in words:
+        suff_less_word = stemmer.stem(word)
+        word_pos = pos_tag(word)
+        if len(msg) > 0:
+            if word_pos[0] == 'NOUN':
+                i = (i + 1) % 5
+                if i == 0:
+                    similarity = check_similarity(suff_less_word, list_synonyms(suff_less_word, 'NOUN'))
+                    similarity = {y: x for x, y in similarity.items()}
+                    if len(similarity) < 2:
+                        continue
+                    else:
+                        similarity_code = dic_bin_codes(list(similarity.items()))
+                        similarity_code = {y: x for x, y in similarity_code.items()}
+                        print(similarity_code)
+                        for c in similarity_code:
+                            if msg.startswith(c):
+                                print(msg)
+                                msg = msg[len(c):]
+                                print("mamy slowo")
+                                print(msg)
+                                print(similarity_code.get(c))
+                                words[cnt] = similarity_code.get(c)
+                                break
+                            else:
+                                continue
+
+            elif word_pos[0] == 'VERB':
+                i = (i + 1) % 5
+                if i == 0:
+                    similarity = check_similarity(suff_less_word, list_synonyms(suff_less_word, 'VERB'))
+                    similarity = {y: x for x, y in similarity.items()}
+                    if len(similarity) < 2:
+                        continue
+                    else:
+                        similarity_code = dic_bin_codes(list(similarity.items()))
+                        similarity_code = {y: x for x, y in similarity_code.items()}
+                        print(similarity_code)
+                        for c in similarity_code:
+                            if msg.startswith(c):
+                                print(msg)
+                                msg = msg[len(c):]
+                                print("mamy slowo")
+                                print(msg)
+                                print(similarity_code.get(c))
+                                words[cnt] = similarity_code.get(c)
+                                break
+                            else:
+                                continue
+            else:
+                continue
         else:
-            print("")
+            print("Szyfrowanie skonczone")
+            steg_text = open('result.txt', 'w')
+            stego = ' '.join(words)
+            steg_text.write(stego)
+            break
+    cnt = cnt+1
+
+    orig_text.close()
+    steg_text.close()
