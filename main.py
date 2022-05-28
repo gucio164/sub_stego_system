@@ -96,7 +96,7 @@ def hd_msg(message, alph):
         res.append(a)
     return res
 
-
+'Deleting suffix for words in given text'
 def remove_suffix(text):
     res = []
     for word in text:
@@ -105,19 +105,7 @@ def remove_suffix(text):
     return res
 
 
-def add_suffix(text, orginal):
-    res = []
-    if len(text) == len(orginal):
-        for word, org in zip(text, orginal):
-            a = stemmer.stem(org)
-            if word == a:
-                res.append(org)
-            else:
-                print('')
-
-    return res
-
-
+'Part of speech tagging'
 def pos_tag(text):
     res = []
     sen = sp(text)
@@ -126,14 +114,14 @@ def pos_tag(text):
         res.append(a)
     return res
 
-
+'Decoding stego messaga bits to text'
 def decode(message):
     alp_decode = dic_bin_codes_decode(alphabet)
     temp = ''.join(message)
     msg_decode = bitarray(temp).decode(alp_decode)
     print(''.join(msg_decode))
 
-
+'Generating list of synonyms for given word and POS'
 def list_synonyms(word, pos):
     synonyms = []
     if pos == 'NOUN':
@@ -142,12 +130,12 @@ def list_synonyms(word, pos):
         pos = wn.VERB
     for syn in wn.synsets(word, pos):
         for i in syn.lemmas():
-            if i.name() == word:
+            if word.lower() in i.name().lower():
                 continue
             synonyms.append(i.name())
     return synonyms
 
-
+'Generating similarity score for given word an its synonyms'
 def check_similarity(word, synon):
     dic = {}
     for syn in synon:
@@ -157,85 +145,79 @@ def check_similarity(word, synon):
         dic.update({syn: similarity})
     return dic
 
+'Finding all differeces between two tokenized texts'
+def lists_diff(l1, l2):
+    dic = []
+    for i, j in zip(l1, l2):
+        if i == j:
+            continue
+        else:
+            dic.append((i, j))
+    return dic
 
 
 if __name__ == "__main__":
     'coding alphabet and secret message letters'
 
     alp_code = dic_bin_codes(alphabet)
-    #print(alp_code)
-    secret = "text to split into sentences"
+    secret = "it is a secret message"
     secret_list = list(secret)
-    #print(secret_list)
     msg = hd_msg(secret_list, alp_code)
     msg = ''.join(msg)
     print(msg)
 
-    '''
-    print(list_synonyms('love', 'NOUN'))
-    similarity = check_similarity('text', list_synonyms('text', 'NOUN'))
-    similarity = {y: x for x, y in similarity.items()}
-    print(similarity)
-    similarity_code = dic_bin_codes(list(similarity.items()))
-    print(similarity_code)
-    '''
-
     'suffix removal and pos tagging'
-    secret = "friday's child is loving and giving"
     tokens = nltk.word_tokenize(secret)
     suff_less_secret = remove_suffix(tokens)
-    #print(suff_less_secret)
-    #print(pos_tag(' '.join(suff_less_secret)))
 
     orig_text = open('covert.txt', 'r')
     words = nltk.word_tokenize(orig_text.read())
-
-    i = 1
+    i = 0
     for id, word in enumerate(words):
         suff_less_word = stemmer.stem(word)
+        word_suf = word.replace(suff_less_word, '')
         word_pos = pos_tag(word)
         if len(msg) > 0:
             if word_pos[0] == 'NOUN':
-                i = (i + 1) % 5
-                if i == 0:
+                if i == 0 and len(word) > 3:
                     similarity = check_similarity(suff_less_word, list_synonyms(suff_less_word, 'NOUN'))
+                    similarity = dict(sorted(similarity.items(), key=lambda x: x[1], reverse=True))
                     similarity = {y: x for x, y in similarity.items()}
                     if len(similarity) < 2:
                         continue
                     else:
-                        similarity_code = dic_bin_codes(list(similarity.items()))
+                        similarity_code = dic_bin_codes(list(similarity.items())[:3])
                         similarity_code = {y: x for x, y in similarity_code.items()}
                         print(similarity_code)
                         for c in similarity_code:
                             if msg.startswith(c):
-                                print(msg)
                                 msg = msg[len(c):]
                                 print("mamy slowo")
                                 print(msg)
-                                print(similarity_code.get(c))
+                                print(similarity_code.get(c) + '---' + words[id])
                                 words[id] = similarity_code.get(c)
                                 break
                             else:
                                 continue
 
-            elif word_pos[0] == 'VERB':
-                i = (i + 1) % 5
+            elif word_pos[0] == 'VERB' and len(word) > 3:
                 if i == 0:
                     similarity = check_similarity(suff_less_word, list_synonyms(suff_less_word, 'VERB'))
+                    similarity = dict(sorted(similarity.items(), key=lambda x: x[1], reverse=True))
                     similarity = {y: x for x, y in similarity.items()}
                     if len(similarity) < 2:
                         continue
                     else:
-                        similarity_code = dic_bin_codes(list(similarity.items()))
+                        similarity_code = dic_bin_codes(list(similarity.items())[:3])
+                        similarity = sorted(similarity)
                         similarity_code = {y: x for x, y in similarity_code.items()}
                         print(similarity_code)
                         for c in similarity_code:
                             if msg.startswith(c):
-                                print(msg)
                                 msg = msg[len(c):]
                                 print("mamy slowo")
                                 print(msg)
-                                print(similarity_code.get(c))
+                                print(similarity_code.get(c) + '---' + words[id])
                                 words[id] = similarity_code.get(c)
                                 break
                             else:
@@ -248,6 +230,32 @@ if __name__ == "__main__":
             stego = ' '.join(words)
             steg_text.write(stego)
             break
-
+        i = (i + 1) % 2
     orig_text.close()
     steg_text.close()
+
+
+    'Deszyfrowanie:'
+    orig_text = open('covert.txt', 'r')
+    stego_text = open('result.txt', 'r')
+
+    words = nltk.word_tokenize(orig_text.read())
+    stego_words = nltk.word_tokenize(stego_text.read())
+    #print(words)
+    #print(stego_words)
+    diff = lists_diff(words, stego_words)
+    print(diff)
+    res_bin_code = ''
+    for word in diff:
+        temp = stemmer.stem(word[0])
+        word_pos = pos_tag(word[0])
+        if word_pos[0] == 'NOUN':
+            similarity = check_similarity(temp, list_synonyms(temp, 'NOUN'))
+        elif word_pos[0] == 'VERB':
+            similarity = check_similarity(temp, list_synonyms(temp, 'VERB'))
+        similarity = dict(sorted(similarity.items(), key=lambda x: x[1], reverse=True))
+        similarity = {y: x for x, y in similarity.items()}
+        similarity_code = dic_bin_codes(list(similarity.items())[:3])
+        res_bin_code += similarity_code[word[1]]
+    print(res_bin_code)
+    decode(res_bin_code)
