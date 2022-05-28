@@ -10,3 +10,22 @@ Jesli slowo jest conajmniej 3 literowym czasownikiem lub rzeczownikiem:
 Jesli znalezione zostaly conajmniej dwa synonimy:
 - Na podstawie ocen podobienstwa generowane jest drzewo huffmana dla synonimow danego slowa
 - Drzewo sprawdzene jest pod katem pokrycia kolejnych bitow sekretu a nastepnie dokonywana jest substytucja slow.
+
+baza wiedzy:
+
+concept - Synonymus Paraphrasing Using WordNet and Internet -book page 312-323 2004_Book_NaturalLanguageProcessingAndIn
+	- A Practical and Effective Approach to Large-Scale Automated Linguistic Steganography -book page 156-165 2001_Book_InformationSecurity
+
+English letter freq - https://en.wikipedia.org/wiki/Letter_frequency
+
+huffman coding - http://stackoverflow.com/questions/11587044/how-can-i-create-a-tree-for-huffman-encoding-and-decoding
+
+suffix removal - https://stackoverflow.com/questions/67126651/how-can-i-remove-suffix-using-the-nltk-package-in-python
+
+POS tagging - https://stackabuse.com/python-for-nlp-parts-of-speech-tagging-and-named-entity-recognition/
+
+t-lex - https://bitsofbinary.wordpress.com/2011/10/19/t-lex-system-with-huffman-coding/
+
+nltk/worndet - https://www.nltk.org/howto/wordnet.html
+
+spacy - https://spacy.io/usage/spacy-101#whats-spacy
