@@ -1,17 +1,12 @@
 import nltk
-import random
-import math
 from nltk.corpus import wordnet as wn
 from nltk.stem.snowball import SnowballStemmer
 import spacy
-import re
 import queue
-import requests
 from bitarray import bitarray
-from itertools import product
 import random
 
-sp = spacy.load('en_core_web_sm')
+sp = spacy.load('en_core_web_md')
 stemmer = SnowballStemmer(language="english")
 
 random.seed(9001)
@@ -23,9 +18,9 @@ alphabet = [(0.1, ' '), (0.082, 'a'), (0.015, 'b'), (0.027, 'c'), (0.043, 'd'), 
             (0.00095, 'q'), (0.06, 'r'),
             (0.063, 's'), (0.091, 't'), (0.028, 'u'), (0.0098, 'v'), (0.024, 'w'), (0.0015, 'x'), (0.02, 'y'),
             (0.00074, 'z')]
+
+
 'Code responsible for creating Huffman tree'
-
-
 class HuffmanNode(object):
     def __init__(self, left=None, right=None, root=None):
         self.left = left
@@ -62,7 +57,7 @@ def walk_tree(node, prefix="", code={}):
     return (code)
 
 
-def dic_bin_codes_decode(freq):
+def generate_codes_decode(freq):
     node = create_tree(freq)
     code = walk_tree(node)
     dic = {}
@@ -74,7 +69,7 @@ def dic_bin_codes_decode(freq):
     return dic
 
 
-def dic_bin_codes(freq):
+def generate_codes(freq):
     node = create_tree(freq)
     code = walk_tree(node)
     dic = {}
@@ -87,14 +82,13 @@ def dic_bin_codes(freq):
 
 
 'End of Huffman tree section'
-
-
 def hd_msg(message, alph):
     res = []
     for a in message:
         a = alph[a]
         res.append(a)
     return res
+
 
 'Deleting suffix for words in given text'
 def remove_suffix(text):
@@ -116,7 +110,7 @@ def pos_tag(text):
 
 'Decoding stego messaga bits to text'
 def decode(message):
-    alp_decode = dic_bin_codes_decode(alphabet)
+    alp_decode = generate_codes_decode(alphabet)
     temp = ''.join(message)
     msg_decode = bitarray(temp).decode(alp_decode)
     print(''.join(msg_decode))
@@ -158,8 +152,7 @@ def lists_diff(l1, l2):
 
 if __name__ == "__main__":
     'coding alphabet and secret message letters'
-
-    alp_code = dic_bin_codes(alphabet)
+    alp_code = generate_codes(alphabet)
     secret = "it is a secret message"
     secret_list = list(secret)
     msg = hd_msg(secret_list, alp_code)
@@ -169,13 +162,13 @@ if __name__ == "__main__":
     'suffix removal and pos tagging'
     tokens = nltk.word_tokenize(secret)
     suff_less_secret = remove_suffix(tokens)
-
+    'opening file, read and tokenize its content'
     orig_text = open('covert.txt', 'r')
     words = nltk.word_tokenize(orig_text.read())
-    i = 0
+    i = 0 #iterator for skipping words
+    'enumerate through given words'
     for id, word in enumerate(words):
         suff_less_word = stemmer.stem(word)
-        word_suf = word.replace(suff_less_word, '')
         word_pos = pos_tag(word)
         if len(msg) > 0:
             if word_pos[0] == 'NOUN':
@@ -186,13 +179,13 @@ if __name__ == "__main__":
                     if len(similarity) < 2:
                         continue
                     else:
-                        similarity_code = dic_bin_codes(list(similarity.items())[:3])
+                        similarity_code = generate_codes(list(similarity.items())[:3])
                         similarity_code = {y: x for x, y in similarity_code.items()}
                         print(similarity_code)
                         for c in similarity_code:
                             if msg.startswith(c):
                                 msg = msg[len(c):]
-                                print("mamy slowo")
+                                print("Found a word:")
                                 print(msg)
                                 print(similarity_code.get(c) + '---' + words[id])
                                 words[id] = similarity_code.get(c)
@@ -208,14 +201,14 @@ if __name__ == "__main__":
                     if len(similarity) < 2:
                         continue
                     else:
-                        similarity_code = dic_bin_codes(list(similarity.items())[:3])
+                        similarity_code = generate_codes(list(similarity.items())[:3])
                         similarity = sorted(similarity)
                         similarity_code = {y: x for x, y in similarity_code.items()}
                         print(similarity_code)
                         for c in similarity_code:
                             if msg.startswith(c):
                                 msg = msg[len(c):]
-                                print("mamy slowo")
+                                print("Found a word:")
                                 print(msg)
                                 print(similarity_code.get(c) + '---' + words[id])
                                 words[id] = similarity_code.get(c)
@@ -225,7 +218,7 @@ if __name__ == "__main__":
             else:
                 continue
         else:
-            print("Szyfrowanie skonczone")
+            print("Coding done..")
             steg_text = open('result.txt', 'w')
             stego = ' '.join(words)
             steg_text.write(stego)
@@ -235,10 +228,10 @@ if __name__ == "__main__":
     steg_text.close()
 
 
-    'Deszyfrowanie:'
+    'Decoding:'
     orig_text = open('covert.txt', 'r')
     stego_text = open('result.txt', 'r')
-
+    print("Decoding starting..")
     words = nltk.word_tokenize(orig_text.read())
     stego_words = nltk.word_tokenize(stego_text.read())
     #print(words)
@@ -255,7 +248,8 @@ if __name__ == "__main__":
             similarity = check_similarity(temp, list_synonyms(temp, 'VERB'))
         similarity = dict(sorted(similarity.items(), key=lambda x: x[1], reverse=True))
         similarity = {y: x for x, y in similarity.items()}
-        similarity_code = dic_bin_codes(list(similarity.items())[:3])
+        similarity_code = generate_codes(list(similarity.items())[:3])
         res_bin_code += similarity_code[word[1]]
     print(res_bin_code)
     decode(res_bin_code)
+    print("Decoding done..")
