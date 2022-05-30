@@ -5,6 +5,7 @@ import spacy
 import queue
 from bitarray import bitarray
 import random
+from pyinflect import getAllInflections, getInflection
 
 sp = spacy.load('en_core_web_md')
 stemmer = SnowballStemmer(language="english")
@@ -126,7 +127,8 @@ def list_synonyms(word, pos):
         for i in syn.lemmas():
             if word.lower() in i.name().lower():
                 continue
-            synonyms.append(i.name())
+            temp2 = "".join([t.lemma_ for t in sp(i.name())])
+            synonyms.append(temp2)
     return synonyms
 
 'Generating similarity score for given word an its synonyms'
@@ -163,12 +165,14 @@ if __name__ == "__main__":
     tokens = nltk.word_tokenize(secret)
     suff_less_secret = remove_suffix(tokens)
     'opening file, read and tokenize its content'
-    orig_text = open('covert.txt', 'r')
+    orig_text = open('overt.txt', 'r')
     words = nltk.word_tokenize(orig_text.read())
     i = 0 #iterator for skipping words
     'enumerate through given words'
     for id, word in enumerate(words):
-        suff_less_word = stemmer.stem(word)
+        word_sp = sp(word)
+        word_tag = "".join([t.tag_ for t in word_sp])
+        suff_less_word = "".join([t.lemma_ for t in word_sp]) #stemmer.stem(word)
         word_pos = pos_tag(word)
         if len(msg) > 0:
             if word_pos[0] == 'NOUN':
@@ -188,7 +192,12 @@ if __name__ == "__main__":
                                 print("Found a word:")
                                 print(msg)
                                 print(similarity_code.get(c) + '---' + words[id])
-                                words[id] = similarity_code.get(c)
+                                inf = getInflection(similarity_code.get(c), tag=word_tag)
+                                print(inf)
+                                if inf:
+                                    words[id] = inf[0]
+                                else:
+                                    words[id] = similarity_code.get(c)
                                 break
                             else:
                                 continue
@@ -211,14 +220,19 @@ if __name__ == "__main__":
                                 print("Found a word:")
                                 print(msg)
                                 print(similarity_code.get(c) + '---' + words[id])
-                                words[id] = similarity_code.get(c)
+                                inf = getInflection(similarity_code.get(c), tag=word_tag)
+                                print(inf)
+                                if inf:
+                                    words[id] = inf[0]
+                                else:
+                                    words[id] = similarity_code.get(c)
                                 break
                             else:
                                 continue
             else:
                 continue
         else:
-            print("Coding done..")
+            print("Encoding done..")
             steg_text = open('result.txt', 'w')
             stego = ' '.join(words)
             steg_text.write(stego)
@@ -229,7 +243,7 @@ if __name__ == "__main__":
 
 
     'Decoding:'
-    orig_text = open('covert.txt', 'r')
+    orig_text = open('overt.txt', 'r')
     stego_text = open('result.txt', 'r')
     print("Decoding starting..")
     words = nltk.word_tokenize(orig_text.read())
@@ -240,7 +254,8 @@ if __name__ == "__main__":
     print(diff)
     res_bin_code = ''
     for word in diff:
-        temp = stemmer.stem(word[0])
+        temp = "".join([t.lemma_ for t in sp(word[0])])
+        temp2 = "".join([t.lemma_ for t in sp(word[1])])
         word_pos = pos_tag(word[0])
         if word_pos[0] == 'NOUN':
             similarity = check_similarity(temp, list_synonyms(temp, 'NOUN'))
@@ -249,7 +264,7 @@ if __name__ == "__main__":
         similarity = dict(sorted(similarity.items(), key=lambda x: x[1], reverse=True))
         similarity = {y: x for x, y in similarity.items()}
         similarity_code = generate_codes(list(similarity.items())[:3])
-        res_bin_code += similarity_code[word[1]]
+        res_bin_code += similarity_code[temp2]
     print(res_bin_code)
     decode(res_bin_code)
     print("Decoding done..")
